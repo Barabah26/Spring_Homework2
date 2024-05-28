@@ -20,10 +20,11 @@ public class Account extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String number;
+    @Enumerated(EnumType.STRING)
     private Currency currency;
     private Double balance;
     @JsonBackReference
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
     private Customer customer;
 

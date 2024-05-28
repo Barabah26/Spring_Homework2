@@ -1,76 +1,93 @@
 package com.example.spring_homework2.dao;
 
 import com.example.spring_homework2.domain.Account;
-import com.example.spring_homework2.domain.Currency;
 import com.example.spring_homework2.domain.Customer;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
 public class AccountDao implements Dao<Account> {
 
-    private final JdbcTemplate jdbcTemplate;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Override
+    @Transactional
     public Account save(Account account) {
-        String sql = "INSERT INTO accounts(number, currency, balance, customer_id) VALUES(?,?,?,?)";
-        jdbcTemplate.update(sql, account.getNumber(), account.getCurrency(), account.getBalance(), account.getCustomer().getId());
+        if (account.getId() == null) {
+            entityManager.persist(account);
+        } else {
+            entityManager.merge(account);
+        }
         return account;
     }
 
+    @Override
+    @Transactional
     public boolean delete(Account account) {
-        String sql = "DELETE FROM accounts WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql, account.getId());
-        return rowsAffected > 0;
-    }
-
-    public void deleteAll() {
-        String sql = "DELETE FROM accounts";
-        jdbcTemplate.update(sql);
+        if (entityManager.contains(account)) {
+            entityManager.remove(account);
+            return true;
+        } else {
+            Account managedAccount = entityManager.find(Account.class, account.getId());
+            if (managedAccount != null) {
+                entityManager.remove(managedAccount);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
+    @Transactional
+    public void deleteAll() {
+        entityManager.createQuery("DELETE FROM Account").executeUpdate();
+    }
+
+    @Override
+    @Transactional
     public void saveAll(Account account) {
-        String sql = "INSERT INTO accounts(number, currency, balance, customer_id) VALUES(?,?,?,?)";
-        jdbcTemplate.update(sql, account.getNumber(), account.getCurrency().toString(), account.getBalance(), account.getCustomer().getId());
+        save(account);
     }
 
     @Override
     public List<Account> findAll() {
-        return jdbcTemplate.query("SELECT * FROM ACCOUNTS", new BeanPropertyRowMapper<>(Account.class));
+        return entityManager.createQuery("SELECT a FROM Account a", Account.class).getResultList();
     }
 
     @Override
     public boolean deleteById(long id) {
-        int rowsAffected = jdbcTemplate.update("DELETE FROM accounts WHERE id = ?", id);
-        return rowsAffected > 0;
+        Account account = entityManager.find(Account.class, id);
+        if (account != null) {
+            entityManager.remove(account);
+            return true;
+        }
+        return false;
     }
-
 
     @Override
     public Account getOne(long id) {
-        String sql = "SELECT * FROM accounts WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Account.class), id);
+        return entityManager.find(Account.class, id);
     }
 
     public Account findByNumber(String number) {
-        String sql = "SELECT * FROM accounts WHERE number = ?";
-        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Account.class), number);
-    }
-
-    public void update(Account account) {
-        String sql = "UPDATE accounts SET number = ?, currency = ?, balance = ? WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql, account.getNumber(), account.getCurrency().toString(), account.getBalance(), account.getId());
-
-        if (rowsAffected == 0) {
-            throw new RuntimeException("Customer not found with id: " + account.getId());
+        try {
+            return entityManager.createQuery("SELECT a FROM Account a WHERE a.number = :number", Account.class)
+                    .setParameter("number", number)
+                    .getSingleResult();
+        } catch (Exception e) {
+            throw new RuntimeException("Account with number " + number + " is not found");
         }
     }
 
+    @Transactional
+    public void update(Account account) {
+        entityManager.merge(account);
+    }
 }

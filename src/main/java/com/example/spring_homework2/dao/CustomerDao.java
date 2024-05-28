@@ -1,74 +1,91 @@
 package com.example.spring_homework2.dao;
 
 import com.example.spring_homework2.domain.Customer;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
 public class CustomerDao implements Dao<Customer> {
 
-    private final JdbcTemplate jdbcTemplate;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Override
+    @Transactional
     public Customer save(Customer customer) {
-        String sql = "INSERT INTO customers(name, email, age) VALUES(?,?,?)";
-        jdbcTemplate.update(sql, customer.getName(), customer.getEmail(), customer.getAge());
+        if (customer.getId() == null) {
+            entityManager.persist(customer);
+        } else {
+            entityManager.merge(customer);
+        }
         return customer;
     }
 
     @Override
+    @Transactional
     public boolean delete(Customer customer) {
-        String sql = "DELETE FROM customers WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql, customer.getId());
-        return rowsAffected > 0;
+        if (entityManager.contains(customer)) {
+            entityManager.remove(customer);
+            return true;
+        } else {
+            Customer managedCustomer = entityManager.find(Customer.class, customer.getId());
+            if (managedCustomer != null) {
+                entityManager.remove(managedCustomer);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
+    @Transactional
     public void deleteAll() {
-        String sql = "DELETE FROM customers";
-        jdbcTemplate.update(sql);
+        entityManager.createQuery("DELETE FROM Customer").executeUpdate();
     }
 
     @Override
+    @Transactional
     public void saveAll(Customer customer) {
-        String sql = "INSERT INTO customers(name, email, age) VALUES(?,?,?)";
-        jdbcTemplate.update(sql, customer.getName(), customer.getEmail(), customer.getAge());
+        save(customer);
     }
-
 
     @Override
     public List<Customer> findAll() {
-        return jdbcTemplate.query("SELECT * FROM customers", new BeanPropertyRowMapper<>(Customer.class));
+        return entityManager.createQuery("SELECT c FROM Customer c", Customer.class).getResultList();
     }
 
     @Override
+    @Transactional
     public boolean deleteById(long id) {
-        String sql = "DELETE FROM customers WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql, id);
-        return rowsAffected > 0;
+        Customer customer = entityManager.find(Customer.class, id);
+        if (customer != null) {
+            entityManager.remove(customer);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public Customer getOne(long id) {
-        String sql = "SELECT * FROM customers WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Customer.class), id);
+        return entityManager.find(Customer.class, id);
     }
 
-
+    @Transactional
     public Customer update(Customer updatedCustomer) {
-        String sql = "UPDATE customers SET name = ?, email = ?, age = ? WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql, updatedCustomer.getName(), updatedCustomer.getEmail(), updatedCustomer.getAge(), updatedCustomer.getId());
-
-        if (rowsAffected == 0) {
+        Customer existingCustomer = entityManager.find(Customer.class, updatedCustomer.getId());
+        if (existingCustomer == null) {
             throw new RuntimeException("Customer not found with id: " + updatedCustomer.getId());
         }
-        return updatedCustomer;
+        existingCustomer.setName(updatedCustomer.getName());
+        existingCustomer.setEmail(updatedCustomer.getEmail());
+        existingCustomer.setAge(updatedCustomer.getAge());
+        entityManager.merge(existingCustomer);
+        return existingCustomer;
     }
-
 }

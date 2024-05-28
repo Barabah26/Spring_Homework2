@@ -1,5 +1,6 @@
 package com.example.spring_homework2.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Customer extends AbstractEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +26,7 @@ public class Customer extends AbstractEntity {
     private String email;
     private Integer age;
     @JsonManagedReference
-    @OneToMany
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Account> accounts;
     @ManyToMany
     @JoinTable(name = "customer_employer",
