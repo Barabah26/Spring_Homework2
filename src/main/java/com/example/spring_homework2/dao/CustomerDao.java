@@ -2,6 +2,7 @@ package com.example.spring_homework2.dao;
 
 import com.example.spring_homework2.domain.Customer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -11,19 +12,8 @@ import java.util.List;
 @Repository
 @RequiredArgsConstructor
 public class CustomerDao implements Dao<Customer> {
-//    private List<Customer> customers = new ArrayList<>();
-//
-//    public CustomerDao() {
-//        initializeDefaultCustomers();
-//    }
 
     private final JdbcTemplate jdbcTemplate;
-
-//    private void initializeDefaultCustomers() {
-//        for (Customer customer : DefaultCustomers.createCustomers()) {
-//            save(customer);
-//        }
-//    }
 
     @Override
     public Customer save(Customer customer) {
@@ -34,56 +24,51 @@ public class CustomerDao implements Dao<Customer> {
 
     @Override
     public boolean delete(Customer customer) {
-        return customers.remove(customer);
+        String sql = "DELETE FROM customers WHERE id = ?";
+        int rowsAffected = jdbcTemplate.update(sql, customer.getId());
+        return rowsAffected > 0;
     }
 
     @Override
-    public void deleteAll(List<Customer> entities) {
-        entities.clear();
+    public void deleteAll() {
+        String sql = "DELETE FROM customers";
+        jdbcTemplate.update(sql);
     }
 
     @Override
-    public void saveAll(List<Customer> entities) {
-        for (Customer customer: entities){
-            save(customer);
-        }
+    public void saveAll(Customer customer) {
+        String sql = "INSERT INTO customers(name, email, age) VALUES(?,?,?)";
+        jdbcTemplate.update(sql, customer.getName(), customer.getEmail(), customer.getAge());
     }
+
 
     @Override
     public List<Customer> findAll() {
-        return customers;
+        return jdbcTemplate.query("SELECT * FROM customers", new BeanPropertyRowMapper<>(Customer.class));
     }
 
     @Override
     public boolean deleteById(long id) {
-        for (Customer customer: customers){
-            if (customer.getId() == id){
-                customers.remove(customer);
-                return true;
-            }
-        }
-        return false;
+        String sql = "DELETE FROM customers WHERE id = ?";
+        int rowsAffected = jdbcTemplate.update(sql, id);
+        return rowsAffected > 0;
     }
 
     @Override
     public Customer getOne(long id) {
-        for (Customer customer: customers){
-            if (customer.getId() == id){
-                return customer;
-            }
-        }
-        return null;
+        String sql = "SELECT * FROM customers WHERE id = ?";
+        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Customer.class), id);
     }
 
 
     public Customer update(Customer updatedCustomer) {
-        for (int i = 0; i < customers.size(); i++) {
-            Customer customer = customers.get(i);
-            if (customer.getId().equals(updatedCustomer.getId())) {
-                customers.set(i, updatedCustomer);
-                return customer;
-            }
+        String sql = "UPDATE customers SET name = ?, email = ?, age = ? WHERE id = ?";
+        int rowsAffected = jdbcTemplate.update(sql, updatedCustomer.getName(), updatedCustomer.getEmail(), updatedCustomer.getAge(), updatedCustomer.getId());
+
+        if (rowsAffected == 0) {
+            throw new RuntimeException("Customer not found with id: " + updatedCustomer.getId());
         }
-        throw new RuntimeException("Customer not found with id: " + updatedCustomer.getId());
+        return updatedCustomer;
     }
+
 }

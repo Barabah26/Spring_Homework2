@@ -8,11 +8,13 @@ import com.example.spring_homework2.domain.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @Slf4j
+@Transactional
 public class DefaultCustomerService implements CustomerService {
     private final CustomerDao customerDao;
     private final AccountDao accountDao;
@@ -34,13 +36,13 @@ public class DefaultCustomerService implements CustomerService {
     }
 
     @Override
-    public void deleteAll(List<Customer> customers) {
-        customerDao.deleteAll(customers);
+    public void deleteAll() {
+        customerDao.deleteAll();
     }
 
     @Override
-    public void saveAll(List<Customer> customers) {
-        customerDao.saveAll(customers);
+    public void saveAll(Customer customer) {
+        customerDao.saveAll(customer);
     }
 
     @Override

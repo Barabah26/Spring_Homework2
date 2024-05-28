@@ -2,12 +2,16 @@ package com.example.spring_homework2.service;
 
 import com.example.spring_homework2.dao.AccountDao;
 import com.example.spring_homework2.domain.Account;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
+@Transactional
 public class DefaultAccountService implements AccountService {
     private final AccountDao accountDao;
 
@@ -27,13 +31,13 @@ public class DefaultAccountService implements AccountService {
     }
 
     @Override
-    public void deleteAll(List<Account> accounts) {
-        accountDao.deleteAll(accounts);
+    public void deleteAll() {
+        accountDao.deleteAll();
     }
 
     @Override
-    public void saveAll(List<Account> accounts) {
-        accountDao.saveAll(accounts);
+    public void saveAll(Account account) {
+        accountDao.saveAll(account);
     }
 
     @Override
@@ -58,16 +62,22 @@ public class DefaultAccountService implements AccountService {
 
     @Override
     public Account depositToAccount(String accountNumber, double amount) {
+        log.info("Depositing {} to account {}", amount, accountNumber);
         if (amount <= 0) {
+            log.error("Deposit amount must be greater than zero: {}", amount);
             throw new IllegalArgumentException("Deposit amount must be greater than zero");
         }
 
         Account account = accountDao.findByNumber(accountNumber);
         if (account != null) {
             Double balance = account.getBalance();
+            log.info("Current balance: {}", balance);
             account.setBalance(balance + amount);
+            accountDao.update(account);
+            log.info("New balance: {}", account.getBalance());
             return account;
         } else {
+            log.error("Account with number {} not found", accountNumber);
             throw new IllegalArgumentException("Account with number " + accountNumber + " not found");
         }
     }

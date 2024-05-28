@@ -13,7 +13,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "accounts")
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 public class Account extends AbstractEntity {

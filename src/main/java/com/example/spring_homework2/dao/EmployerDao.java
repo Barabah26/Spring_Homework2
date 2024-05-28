@@ -16,12 +16,12 @@ public class EmployerDao implements Dao<Employer> {
     }
 
     @Override
-    public void deleteAll(List<Employer> entities) {
+    public void deleteAll() {
 
     }
 
     @Override
-    public void saveAll(List<Employer> entities) {
+    public void saveAll(Employer employer) {
 
     }
 

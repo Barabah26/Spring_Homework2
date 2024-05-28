@@ -6,7 +6,7 @@ public interface Dao<T> {
     T save(T obj);
     boolean delete(T obj);
     void deleteAll();
-    void saveAll();
+    void saveAll(T t);
     List<T> findAll();
     boolean deleteById(long id);
     T getOne(long id);

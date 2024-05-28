@@ -8,8 +8,8 @@ import java.util.List;
 public interface CustomerService {
     Customer save(Customer obj);
     boolean delete(Customer obj);
-    void deleteAll(List<Customer> entities);
-    void saveAll(List<Customer> entities);
+    void deleteAll();
+    void saveAll(Customer customer);
     List<Customer> findAll();
     boolean deleteById(Long id);
     Customer getOne(long id);

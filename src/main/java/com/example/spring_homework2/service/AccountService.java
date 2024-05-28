@@ -7,8 +7,8 @@ import java.util.List;
 public interface AccountService {
     void save(Account account);
     boolean delete(Account account);
-    void deleteAll(List<Account> accounts);
-    void saveAll(List<Account> accounts);
+    void deleteAll();
+    void saveAll(Account account);
     List<Account> findAll();
     boolean deleteById(long id);
     Account getOne(long id);
