@@ -8,5 +8,5 @@ INSERT INTO accounts (number, currency, balance, customer_id) VALUES ('111', 'US
 INSERT INTO accounts (number, currency, balance, customer_id) VALUES ('222', 'EUR', 2000.0, 2);
 
 INSERT INTO customer_employer (customer_id, employer_id) VALUES (1, 1);
-INSERT INTO customer_employer (customer_id, employer_id) VALUES (1, 2);
-INSERT INTO customer_employer (customer_id, employer_id) VALUES (2, 1);
+INSERT INTO customer_employer (customer_id, employer_id) VALUES (2, 2);
+-- INSERT INTO customer_employer (customer_id, employer_id) VALUES (2, 1);
